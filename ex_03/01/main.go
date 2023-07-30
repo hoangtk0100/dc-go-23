@@ -13,37 +13,25 @@ func countRectangles(rectangles [][]int) int {
 	count := 0
 	rows := len(rectangles)
 	cols := len(rectangles[0])
-	rectangleMarkedPoints := map[string]bool{}
 
-	// isMarkedPoint checks if a point is already marked
-	isMarkedPoint := func(x, y int) bool {
-		_, ok := rectangleMarkedPoints[formatKey(x, y)]
-		return ok
-	}
-
-	// markPoints marks valid points in detected rectangle
-	markPoints := func(x, y int) {
-		for row := x; row < rows; row++ {
-			if rectangles[row][y] == 0 {
-				return
-			}
-
-			for col := y; col < cols; col++ {
-				if rectangles[row][col] == 0 {
-					break
-				}
-				if isMarkedPoint(row, col) {
-					continue
-				}
-
-				rectangleMarkedPoints[formatKey(row, col)] = true
-			}
+	// markPoints marks visited points in detected rectangle
+	var markPoints func(row, col int)
+	markPoints = func(row, col int) {
+		if row < 0 || row >= rows || col < 0 || col >= cols || rectangles[row][col] != 1 {
+			return
 		}
+
+		rectangles[row][col] = -1
+
+		markPoints(row-1, col)
+		markPoints(row+1, col)
+		markPoints(row, col-1)
+		markPoints(row, col+1)
 	}
 
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
-			if rectangles[row][col] == 1 && !isMarkedPoint(row, col) {
+			if rectangles[row][col] == 1 {
 				count++
 				markPoints(row, col)
 			}
