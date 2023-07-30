@@ -41,11 +41,6 @@ func countRectangles(rectangles [][]int) int {
 	return count
 }
 
-// formatKey formats key for map rectangleMarkedPoints
-func formatKey(x, y int) string {
-	return fmt.Sprintf("(%v,%v)", x, y)
-}
-
 func main() {
 	arr := [][]int{
 		{1, 0, 0, 0, 0, 0, 0},
