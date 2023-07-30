@@ -1,20 +1,51 @@
 package main
 
-import "fmt"
-
-var (
-	rectangleMarkedPoints = map[string]bool{}
+import (
+	"fmt"
 )
 
 // countRectangles returns a number of rectangles filled with 1
 func countRectangles(rectangles [][]int) int {
-	count := 0
+	if len(rectangles) == 0 || len(rectangles[0]) == 0 {
+		return 0
+	}
 
-	for x := 0; x < len(rectangles); x++ {
-		for y := 0; y < len(rectangles[0]); y++ {
-			if rectangles[x][y] == 1 && !checkMarkedPoint(x, y) {
+	count := 0
+	rows := len(rectangles)
+	cols := len(rectangles[0])
+	rectangleMarkedPoints := map[string]bool{}
+
+	// isMarkedPoint checks if a point is already marked
+	isMarkedPoint := func(x, y int) bool {
+		_, ok := rectangleMarkedPoints[formatKey(x, y)]
+		return ok
+	}
+
+	// markPoints marks valid points in detected rectangle
+	markPoints := func(x, y int) {
+		for row := x; row < rows; row++ {
+			if rectangles[row][y] == 0 {
+				return
+			}
+
+			for col := y; col < cols; col++ {
+				if rectangles[row][col] == 0 {
+					break
+				}
+				if isMarkedPoint(row, col) {
+					continue
+				}
+
+				rectangleMarkedPoints[formatKey(row, col)] = true
+			}
+		}
+	}
+
+	for row := 0; row < rows; row++ {
+		for col := 0; col < cols; col++ {
+			if rectangles[row][col] == 1 && !isMarkedPoint(row, col) {
 				count++
-				markRectanglePoints(rectangles, x, y)
+				markPoints(row, col)
 			}
 		}
 	}
@@ -25,33 +56,6 @@ func countRectangles(rectangles [][]int) int {
 // formatKey formats key for map rectangleMarkedPoints
 func formatKey(x, y int) string {
 	return fmt.Sprintf("(%v,%v)", x, y)
-}
-
-// checkMarkedPoint checks if a point is already marked
-func checkMarkedPoint(x, y int) bool {
-	_, ok := rectangleMarkedPoints[formatKey(x, y)]
-	return ok
-}
-
-// markRectanglePoints marks valid points in detected rectangle
-func markRectanglePoints(rectangles [][]int, x, y int) {
-	for xIndex := x; xIndex < len(rectangles); xIndex++ {
-		if rectangles[xIndex][y] == 0 {
-			break
-		}
-
-		for yIndex := y; yIndex < len(rectangles[xIndex]); yIndex++ {
-			if rectangles[xIndex][yIndex] == 0 {
-				break
-			}
-
-			if checkMarkedPoint(xIndex, yIndex) {
-				continue
-			}
-
-			rectangleMarkedPoints[formatKey(xIndex, yIndex)] = true
-		}
-	}
 }
 
 func main() {
