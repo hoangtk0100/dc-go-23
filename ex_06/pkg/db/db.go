@@ -5,6 +5,7 @@ import "github.com/hoangtk0100/dc-go-23/ex_06/pkg/model"
 type DB struct {
 	DBProducts DBProducts
 	DBCart     DBCart
+	DBUser     DBUser
 }
 
 type DBProducts struct {
@@ -17,6 +18,10 @@ type DBCart struct {
 	Items map[int64]model.CartItem
 }
 
+type DBUser struct {
+	Users map[string]model.User
+}
+
 func NewDB() *DB {
 	return &DB{
 		DBProducts: DBProducts{
@@ -26,6 +31,9 @@ func NewDB() *DB {
 		DBCart: DBCart{
 			Cart:  nil,
 			Items: make(map[int64]model.CartItem),
+		},
+		DBUser: DBUser{
+			Users: make(map[string]model.User),
 		},
 	}
 }

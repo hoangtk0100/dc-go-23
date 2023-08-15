@@ -1,8 +1,13 @@
 package validation
 
 import (
+	"errors"
 	"github.com/go-playground/validator/v10"
 	. "github.com/hoangtk0100/dc-go-23/ex_06/pkg/constant"
+)
+
+var (
+	ErrPasswordTooShort = errors.New("password too short, password must be at least 8 characters")
 )
 
 func IsCurrency(input string) bool {
@@ -49,4 +54,12 @@ func IsProductStatus(input string) bool {
 	default:
 		return false
 	}
+}
+
+func ValidatePassword(input string) error {
+	if len(input) < 8 {
+		return ErrPasswordTooShort
+	}
+
+	return nil
 }

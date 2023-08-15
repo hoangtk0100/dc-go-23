@@ -2,7 +2,6 @@ package token
 
 import (
 	"fmt"
-	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/util"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -32,7 +31,7 @@ type jwtMaker struct {
 
 func NewJWTMaker(secretKey string, accessTokenExpiresIn time.Duration, refreshTokenExpiresIn time.Duration) (*jwtMaker, error) {
 	if len(secretKey) < minJWTSecretKeySize {
-		return nil, util.ErrInternalServerError.WithError(ErrInvalidJWTKeySize.Error())
+		return nil, errors.WithStack(ErrInvalidJWTKeySize)
 	}
 
 	return &jwtMaker{
@@ -60,14 +59,14 @@ func (maker *jwtMaker) getTokenDuration(tokenType TokenType, duration ...time.Du
 		}
 	case CustomToken:
 		if len(duration) == 0 {
-			return 0, util.ErrInternalServerError.WithError(ErrMissingCustomDuration.Error())
+			return 0, errors.WithStack(ErrMissingCustomDuration)
 		} else if len(duration) > 1 {
-			return 0, util.ErrInternalServerError.WithError(ErrTooManyCustomDuration.Error())
+			return 0, errors.WithStack(ErrTooManyCustomDuration)
 		}
 
 		tokenDuration = duration[0]
 	default:
-		return 0, util.ErrInternalServerError.WithError(ErrInvalidTokenType.Error())
+		return 0, errors.WithStack(ErrInvalidTokenType)
 	}
 
 	return tokenDuration, nil

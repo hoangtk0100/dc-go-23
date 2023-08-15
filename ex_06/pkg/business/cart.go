@@ -6,6 +6,7 @@ import (
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/model"
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/repository"
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/util"
+	validator "github.com/hoangtk0100/dc-go-23/ex_06/pkg/validation"
 )
 
 var (
@@ -38,6 +39,11 @@ func (c *cartBusiness) AddItem(ctx context.Context, data *model.ModifyCartItemPa
 	if data.Quantity < 1 {
 		return util.ErrBadRequest.
 			WithError(ErrNegativeQuantity.Error())
+	}
+
+	if !validator.IsProductStatus(prod.Status) {
+		return util.ErrBadRequest.
+			WithError(ErrProductDeleted.Error())
 	}
 
 	cart, err := c.repo.Cart().GetActiveCart(ctx)

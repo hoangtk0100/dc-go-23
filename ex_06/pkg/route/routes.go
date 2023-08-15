@@ -20,6 +20,12 @@ type Server interface {
 	AddCartItem(ctx *gin.Context)
 	RemoveCartItem(ctx *gin.Context)
 	Checkout(ctx *gin.Context)
+
+	// User
+	Register(ctx *gin.Context)
+
+	// Auth
+	Login(ctx *gin.Context)
 }
 
 func SetupRoutes(server Server) {
@@ -27,4 +33,6 @@ func SetupRoutes(server Server) {
 
 	addProductRoutes(server, v1)
 	addCartRoutes(server, v1)
+	addUserRoutes(server, v1)
+	addAuthRoutes(server, v1)
 }

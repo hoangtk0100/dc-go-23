@@ -9,6 +9,7 @@ import (
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/db"
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/repository"
 	router "github.com/hoangtk0100/dc-go-23/ex_06/pkg/route"
+	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/token"
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/util"
 	custom_validator "github.com/hoangtk0100/dc-go-23/ex_06/pkg/validation"
 	"log"
@@ -20,10 +21,11 @@ import (
 )
 
 type Server struct {
-	config   util.Config
-	router   *gin.Engine
-	store    *db.DB
-	business business.Business
+	config     util.Config
+	tokenMaker token.TokenMaker
+	router     *gin.Engine
+	store      *db.DB
+	business   business.Business
 }
 
 func NewServer(config util.Config) *Server {
@@ -32,9 +34,15 @@ func NewServer(config util.Config) *Server {
 		router: gin.Default(),
 	}
 
+	tokenMaker, err := token.NewJWTMaker(config.SecretKey, config.AccessTokenExpiresIn, config.RefreshTokenExpiresIn)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	server.tokenMaker = tokenMaker
 	server.store = db.NewDB()
 	repo := repository.NewRepository(server.store)
-	server.business = business.NewBusiness(repo)
+	server.business = business.NewBusiness(repo, tokenMaker)
 
 	// Add custom validator for Currency, WeightUnit
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {

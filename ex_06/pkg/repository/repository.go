@@ -9,6 +9,7 @@ type Repository interface {
 	Product() ProductRepository
 	Cart() CartRepository
 	Payment() PaymentRepository
+	User() UserRepository
 }
 
 type ProductRepository interface {
@@ -34,4 +35,9 @@ type CartRepository interface {
 
 type PaymentRepository interface {
 	Create(ctx context.Context, data *model.Payment) (*model.Payment, error)
+}
+
+type UserRepository interface {
+	GetByUsername(ctx context.Context, username string) (*model.User, error)
+	Create(ctx context.Context, data *model.CreateUserParams) (*model.User, error)
 }

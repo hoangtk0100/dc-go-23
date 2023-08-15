@@ -28,7 +28,7 @@ type CartItem struct {
 }
 
 type ModifyCartItemParams struct {
-	CartID    int64   `json:"_"`
+	CartID    int64   `json:"-"`
 	ProductID int64   `json:"product_id" binding:"required,min=1"`
 	Quantity  int64   `json:"quantity" binding:"required,min=0"`
 	Price     float64 `json:"price"`

@@ -7,6 +7,7 @@ type repository struct {
 	productRepo ProductRepository
 	cartRepo    CartRepository
 	paymentRepo PaymentRepository
+	userRepo    UserRepository
 }
 
 func NewRepository(db *db.DB) *repository {
@@ -15,6 +16,7 @@ func NewRepository(db *db.DB) *repository {
 		productRepo: NewProductRepository(db),
 		cartRepo:    NewCartRepository(db),
 		paymentRepo: NewPaymentRepository(db),
+		userRepo:    NewUserRepository(db),
 	}
 }
 
@@ -28,4 +30,8 @@ func (repo *repository) Cart() CartRepository {
 
 func (repo *repository) Payment() PaymentRepository {
 	return repo.paymentRepo
+}
+
+func (repo *repository) User() UserRepository {
+	return repo.userRepo
 }
