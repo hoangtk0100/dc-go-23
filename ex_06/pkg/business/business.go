@@ -7,6 +7,7 @@ import (
 
 type Business interface {
 	Product() ProductBusiness
+	Cart() CartBusiness
 }
 
 type ProductBusiness interface {
@@ -15,4 +16,11 @@ type ProductBusiness interface {
 	DeleteByID(ctx context.Context, id int64) error
 	GetByID(ctx context.Context, id int64) (*model.Product, error)
 	GetAll(ctx context.Context) ([]model.Product, error)
+}
+
+type CartBusiness interface {
+	AddItem(ctx context.Context, data *model.ModifyCartItemParams) error
+	RemoveItem(ctx context.Context, data *model.ModifyCartItemParams) error
+	GetByID(ctx context.Context, id int64) (interface{}, error)
+	Checkout(ctx context.Context) (*model.Payment, error)
 }

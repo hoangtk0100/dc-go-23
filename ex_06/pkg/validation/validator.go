@@ -40,3 +40,13 @@ var ValidateWeightUnit validator.Func = func(fieldLevel validator.FieldLevel) bo
 
 	return false
 }
+
+func IsProductStatus(input string) bool {
+	unit := ProductStatus(input)
+	switch unit {
+	case ProductStatusActive, ProductStatusDeleted:
+		return true
+	default:
+		return false
+	}
+}
