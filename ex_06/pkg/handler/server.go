@@ -25,6 +25,7 @@ type Server struct {
 	tokenMaker token.TokenMaker
 	router     *gin.Engine
 	store      *db.DB
+	repo       repository.Repository
 	business   business.Business
 }
 
@@ -41,8 +42,8 @@ func NewServer(config util.Config) *Server {
 
 	server.tokenMaker = tokenMaker
 	server.store = db.NewDB()
-	repo := repository.NewRepository(server.store)
-	server.business = business.NewBusiness(repo, tokenMaker)
+	server.repo = repository.NewRepository(server.store)
+	server.business = business.NewBusiness(server.repo, tokenMaker)
 
 	// Add custom validator for Currency, WeightUnit
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -56,6 +57,14 @@ func NewServer(config util.Config) *Server {
 
 func (server *Server) GetRouter() *gin.Engine {
 	return server.router
+}
+
+func (server *Server) GetRepository() repository.Repository {
+	return server.repo
+}
+
+func (server *Server) GetTokenMaker() token.TokenMaker {
+	return server.tokenMaker
 }
 
 func (server *Server) Start() {

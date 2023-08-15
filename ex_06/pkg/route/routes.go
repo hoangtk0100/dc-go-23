@@ -2,10 +2,15 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/middleware"
+	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/repository"
+	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/token"
 )
 
 type Server interface {
 	GetRouter() *gin.Engine
+	GetRepository() repository.Repository
+	GetTokenMaker() token.TokenMaker
 	Start()
 
 	// Product
@@ -30,6 +35,7 @@ type Server interface {
 
 func SetupRoutes(server Server) {
 	v1 := server.GetRouter().Group("/v1")
+	v1.Use(middleware.Recovery())
 
 	addProductRoutes(server, v1)
 	addCartRoutes(server, v1)

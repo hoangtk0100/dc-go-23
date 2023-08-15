@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/constant"
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/db"
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/model"
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/util"
@@ -26,6 +27,7 @@ func (p *productRepo) Create(ctx context.Context, data *model.CreateProductParam
 		Currency:    data.Currency,
 		Description: data.Description,
 		Slug:        data.Slug,
+		Status:      string(constant.ProductStatusActive),
 	}
 
 	prod.ID = p.getLastIdx() + 1

@@ -3,10 +3,10 @@ package business
 import (
 	"context"
 	"errors"
+	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/constant"
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/model"
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/repository"
 	"github.com/hoangtk0100/dc-go-23/ex_06/pkg/util"
-	validator "github.com/hoangtk0100/dc-go-23/ex_06/pkg/validation"
 )
 
 var (
@@ -41,7 +41,7 @@ func (c *cartBusiness) AddItem(ctx context.Context, data *model.ModifyCartItemPa
 			WithError(ErrNegativeQuantity.Error())
 	}
 
-	if !validator.IsProductStatus(prod.Status) {
+	if constant.ProductStatus(prod.Status) == constant.ProductStatusDeleted {
 		return util.ErrBadRequest.
 			WithError(ErrProductDeleted.Error())
 	}
