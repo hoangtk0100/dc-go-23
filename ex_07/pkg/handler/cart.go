@@ -7,13 +7,14 @@ import (
 )
 
 type cartIDRequest struct {
-	ID int64 `uri:"id" binding:"min=1"`
+	ID *int64 `uri:"id"`
 }
 
 func (server *Server) GetCartDetails(ctx *gin.Context) {
 	var reqID cartIDRequest
 	if err := ctx.ShouldBindUri(&reqID); err != nil {
-		reqID.ID = -1
+		util.ErrorResponse(ctx, util.ErrBadRequest.WithError(err.Error()))
+		return
 	}
 
 	cart, err := server.business.Cart().GetByID(ctx, reqID.ID)

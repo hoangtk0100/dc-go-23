@@ -2,95 +2,81 @@ package repository
 
 import (
 	"context"
-
-	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/constant"
-	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/db"
-	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/model"
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/util"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
+
+	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/model"
 )
 
 type productRepo struct {
-	db *db.DB
+	db *DB
 }
 
-func NewProductRepository(db *db.DB) *productRepo {
+func NewProductRepository(db *DB) *productRepo {
 	return &productRepo{db}
 }
 
-func (p *productRepo) Create(ctx context.Context, data *model.CreateProductParams) (*model.Product, error) {
-	prod := &model.Product{
-		Name:        data.Name,
-		Code:        data.Code,
-		Quantity:    data.Quantity,
-		Weight:      data.Weight,
-		WeightUnit:  data.WeightUnit,
-		Price:       data.Price,
-		Currency:    data.Currency,
-		Description: data.Description,
-		Slug:        data.Slug,
-		Status:      string(constant.ProductStatusActive),
+func (p *productRepo) Create(ctx context.Context, data *model.Product) (*model.Product, error) {
+	tx := p.db.Begin()
+	if err := tx.Create(&data).Error; err != nil {
+		tx.Rollback()
+		return nil, errors.WithStack(err)
 	}
 
-	prod.ID = p.getLastIdx() + 1
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, errors.WithStack(err)
+	}
 
-	p.db.DBProducts.Products[prod.ID] = *prod
-	p.db.DBProducts.LastIdx = prod.ID
-	return prod, nil
+	return data, nil
 }
 
-func (p *productRepo) Update(ctx context.Context, data *model.UpdateProductParams) (*model.Product, error) {
-	prod, existed := p.getProduct(data.ID)
-	if !existed {
-		return nil, util.ErrNotFound
+func (p *productRepo) Update(ctx context.Context, id int64, data *model.Product) (*model.Product, error) {
+	tx := p.db.Begin()
+	if err := tx.Where("id = ?", id).Updates(&data).Error; err != nil {
+		tx.Rollback()
+		return nil, errors.WithStack(err)
 	}
 
-	prod.Name = data.Name
-	prod.Code = data.Code
-	prod.Quantity = data.Quantity
-	prod.Weight = data.Weight
-	prod.WeightUnit = data.WeightUnit
-	prod.Price = data.Price
-	prod.Currency = data.Currency
-	prod.Description = data.Description
-	prod.Slug = data.Slug
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, errors.WithStack(err)
+	}
 
-	p.db.DBProducts.Products[prod.ID] = *prod
-	return prod, nil
+	return data, nil
 }
 
 func (p *productRepo) DeleteByID(ctx context.Context, id int64) error {
-	prod, existed := p.getProduct(id)
-	if !existed {
-		return util.ErrNotFound
+	if err := p.db.Table(model.Product{}.TableName()).
+		Where("id = ?", id).
+		Delete(nil).Error; err != nil {
+		return errors.WithStack(err)
 	}
 
-	delete(p.db.DBProducts.Products, prod.ID)
 	return nil
 }
 
 func (p *productRepo) GetByID(ctx context.Context, id int64) (*model.Product, error) {
-	prod, existed := p.getProduct(id)
-	if !existed {
-		return nil, util.ErrNotFound
+	var prod model.Product
+	if err := p.db.Where("id = ?", id).First(&prod).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, util.ErrNotFound
+		}
+
+		return nil, errors.WithStack(err)
 	}
 
-	return prod, nil
+	return &prod, nil
 }
 
 func (p *productRepo) GetAll(ctx context.Context) ([]model.Product, error) {
 	var result []model.Product
-	for _, prodIdx := range p.db.DBProducts.Products {
-		result = append(result, prodIdx)
+	if err := p.db.Table(model.Product{}.TableName()).
+		Order("id desc").
+		Find(&result).Error; err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	return result, nil
-}
-
-func (p *productRepo) getProduct(id int64) (*model.Product, bool) {
-	prod, existed := p.db.DBProducts.Products[id]
-	return &prod, existed
-}
-
-func (p *productRepo) getLastIdx() int64 {
-	return p.db.DBProducts.LastIdx
 }

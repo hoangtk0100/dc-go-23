@@ -2,6 +2,9 @@ package handler
 
 import (
 	"context"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
+	custom_validator "github.com/hoangtk0100/dc-go-23/ex_07/pkg/validation"
 	"log"
 	"net/http"
 	"os"
@@ -10,22 +13,18 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/business"
-	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/db"
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/repository"
 	router "github.com/hoangtk0100/dc-go-23/ex_07/pkg/route"
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/token"
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/util"
-	custom_validator "github.com/hoangtk0100/dc-go-23/ex_07/pkg/validation"
 )
 
 type Server struct {
 	config     util.Config
 	tokenMaker token.TokenMaker
 	router     *gin.Engine
-	store      *db.DB
+	store      *repository.DB
 	repo       repository.Repository
 	business   business.Business
 }
@@ -42,7 +41,7 @@ func NewServer(config util.Config) *Server {
 	}
 
 	server.tokenMaker = tokenMaker
-	server.store = db.NewDB()
+	server.store = repository.NewDB(config.DBSource)
 	server.repo = repository.NewRepository(server.store)
 	server.business = business.NewBusiness(server.repo, tokenMaker)
 

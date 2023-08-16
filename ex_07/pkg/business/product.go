@@ -29,7 +29,20 @@ func NewProductBusiness(repo repository.Repository) *productBusiness {
 
 func (b *productBusiness) Create(ctx context.Context, data *model.CreateProductParams) (*model.Product, error) {
 	// TODO: Check if brand and category exist
-	prod, err := b.repo.Product().Create(ctx, data)
+
+	params := &model.Product{
+		Name:        data.Name,
+		Code:        data.Code,
+		Quantity:    data.Quantity,
+		Weight:      data.Weight,
+		WeightUnit:  constant.WeightUnit(data.WeightUnit),
+		Price:       data.Price,
+		Currency:    constant.Currency(data.Currency),
+		Description: data.Description,
+		Slug:        data.Slug,
+	}
+
+	prod, err := b.repo.Product().Create(ctx, params)
 	if err != nil {
 		return nil, util.ErrInternalServerError.
 			WithError(ErrCannotCreateProduct.Error()).
@@ -39,15 +52,24 @@ func (b *productBusiness) Create(ctx context.Context, data *model.CreateProductP
 	return prod, nil
 }
 
-func (b *productBusiness) Update(ctx context.Context, data *model.UpdateProductParams) (*model.Product, error) {
-	_, err := b.validateExistedProduct(ctx, data.ID)
+func (b *productBusiness) Update(ctx context.Context, id int64, data *model.UpdateProductParams) (*model.Product, error) {
+	prod, err := b.validateExistedProduct(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: Check if brand and category exist
+	prod.Name = data.Name
+	prod.Code = data.Code
+	prod.Quantity = data.Quantity
+	prod.Weight = data.Weight
+	prod.WeightUnit = constant.WeightUnit(data.WeightUnit)
+	prod.Price = data.Price
+	prod.Currency = constant.Currency(data.Currency)
+	prod.Description = data.Description
+	prod.Slug = data.Slug
 
-	prod, err := b.repo.Product().Update(ctx, data)
+	prod, err = b.repo.Product().Update(ctx, id, prod)
 	if err != nil {
 		return nil, util.ErrInternalServerError.
 			WithError(ErrCannotUpdateProduct.Error()).
@@ -107,7 +129,7 @@ func (b *productBusiness) validateExistedProduct(ctx context.Context, id int64) 
 			WithDebug(err.Error())
 	}
 
-	if constant.ProductStatus(prod.Status) == constant.ProductStatusDeleted {
+	if prod.Status == constant.ProductStatusDeleted {
 		return nil, util.ErrBadRequest.
 			WithError(ErrProductDeleted.Error()).
 			WithDebug(err.Error())

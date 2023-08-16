@@ -41,8 +41,7 @@ func (server *Server) UpdateProduct(ctx *gin.Context) {
 		return
 	}
 
-	req.ID = reqID.ID
-	prod, err := server.business.Product().Update(ctx, &req)
+	prod, err := server.business.Product().Update(ctx, reqID.ID, &req)
 	if err != nil {
 		util.ErrorResponse(ctx, err)
 		return

@@ -14,6 +14,7 @@ var (
 type Config struct {
 	ENV                   string        `mapstructure:"ENV"`
 	SecretKey             string        `mapstructure:"SECRET_KEY"`
+	DBSource              string        `mapstructure:"DB_SOURCE"`
 	ServerAddress         string        `mapstructure:"SERVER_ADDRESS"`
 	AccessTokenExpiresIn  time.Duration `mapstructure:"ACCESS_TOKEN_EXPIRES_IN"`
 	RefreshTokenExpiresIn time.Duration `mapstructure:"REFRESH_TOKEN_EXPIRES_IN"`

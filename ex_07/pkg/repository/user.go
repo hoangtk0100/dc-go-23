@@ -2,51 +2,45 @@ package repository
 
 import (
 	"context"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
 
-	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/db"
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/model"
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/util"
 )
 
 type userRepo struct {
-	db *db.DB
+	db *DB
 }
 
-func NewUserRepository(db *db.DB) *userRepo {
+func NewUserRepository(db *DB) *userRepo {
 	return &userRepo{db}
 }
 
 func (u *userRepo) GetByUsername(ctx context.Context, username string) (*model.User, error) {
-	user, existed := u.getUserFromDB(username)
-	if !existed {
-		return nil, util.ErrNotFound
+	var user model.User
+	if err := u.db.Where("username = ?", username).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, util.ErrNotFound
+		}
+
+		return nil, errors.WithStack(err)
 	}
 
-	return user, nil
+	return &user, nil
 }
 
-func (u *userRepo) Create(ctx context.Context, data *model.CreateUserParams) (*model.User, error) {
-	_, existed := u.getUserFromDB(data.Username)
-	if existed {
-		return nil, util.ErrConflict
+func (u *userRepo) Create(ctx context.Context, data *model.User) (*model.User, error) {
+	tx := u.db.Begin()
+	if err := tx.Create(&data).Error; err != nil {
+		tx.Rollback()
+		return nil, errors.WithStack(err)
 	}
 
-	user := mapParamsToUser(data)
-	u.db.DBUser.Users[data.Username] = *user
-	return user, nil
-}
-
-func (u *userRepo) getUserFromDB(username string) (*model.User, bool) {
-	user, existed := u.db.DBUser.Users[username]
-	return &user, existed
-}
-
-func mapParamsToUser(params *model.CreateUserParams) *model.User {
-	return &model.User{
-		Username:       params.Username,
-		HashedPassword: params.HashedPassword,
-		Salt:           params.Salt,
-		Email:          params.Email,
-		FullName:       params.FullName,
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, errors.WithStack(err)
 	}
+
+	return data, nil
 }

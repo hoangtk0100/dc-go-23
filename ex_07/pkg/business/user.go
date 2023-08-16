@@ -19,7 +19,7 @@ type userBusiness struct {
 	repo repository.Repository
 }
 
-func NewUserUserBusiness(repo repository.Repository) *userBusiness {
+func NewUserBusiness(repo repository.Repository) *userBusiness {
 	return &userBusiness{repo: repo}
 }
 
@@ -30,8 +30,8 @@ func (b *userBusiness) Register(ctx context.Context, data *model.CreateUserParam
 			WithDebug(err.Error())
 	}
 
-	user, err := b.repo.User().GetByUsername(ctx, data.Username)
-	if err == nil && user != nil {
+	existedUser, err := b.repo.User().GetByUsername(ctx, data.Username)
+	if err == nil && existedUser != nil {
 		return nil, util.ErrConflict.WithError(ErrUserExisted.Error())
 	}
 
@@ -49,10 +49,15 @@ func (b *userBusiness) Register(ctx context.Context, data *model.CreateUserParam
 			WithDebug(err.Error())
 	}
 
-	data.HashedPassword = hashedPassword
-	data.Salt = salt
+	params := &model.User{
+		Username:       data.Username,
+		HashedPassword: hashedPassword,
+		Salt:           salt,
+		Email:          data.Email,
+		FullName:       data.FullName,
+	}
 
-	user, err = b.repo.User().Create(ctx, data)
+	user, err := b.repo.User().Create(ctx, params)
 	if err != nil {
 		return nil, util.ErrInternalServerError.
 			WithError(ErrCannotRegister.Error()).

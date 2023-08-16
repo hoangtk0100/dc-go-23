@@ -42,7 +42,7 @@ func (c *cartBusiness) AddItem(ctx context.Context, data *model.ModifyCartItemPa
 			WithError(ErrNegativeQuantity.Error())
 	}
 
-	if constant.ProductStatus(prod.Status) == constant.ProductStatusDeleted {
+	if prod.Status == constant.ProductStatusDeleted {
 		return util.ErrBadRequest.
 			WithError(ErrProductDeleted.Error())
 	}
@@ -57,22 +57,27 @@ func (c *cartBusiness) AddItem(ctx context.Context, data *model.ModifyCartItemPa
 		}
 	}
 
-	data.Price = prod.Price
-	data.Currency = prod.Currency
+	params := &model.CartItem{
+		CartID:    data.CartID,
+		ProductID: data.ProductID,
+		Quantity:  data.Quantity,
+		Price:     prod.Price,
+		Currency:  prod.Currency,
+		Note:      data.Note,
+	}
 
 	quantity := data.Quantity
-	item, err := c.repo.Cart().GetItem(ctx, cart.ID, data.ProductID)
+	item, err := c.repo.Cart().GetItem(ctx, cart.ID, params.ProductID)
 	if err != nil && util.ErrNotFound.Is(err) {
-		data.CartID = cart.ID
-		item, err = c.repo.Cart().CreateItem(ctx, data)
+		item, err = c.repo.Cart().CreateItem(ctx, params)
 		if err != nil {
 			return util.ErrInternalServerError.
 				WithError(ErrCannotAddCartItem.Error()).
 				WithDebug(err.Error())
 		}
 	} else {
-		data.Quantity += item.Quantity
-		item, err = c.repo.Cart().UpdateItem(ctx, data)
+		params.Quantity += item.Quantity
+		item, err = c.repo.Cart().UpdateItem(ctx, params)
 		if err != nil {
 			return util.ErrInternalServerError.
 				WithError(ErrCannotAddCartItem.Error()).
@@ -121,11 +126,16 @@ func (c *cartBusiness) RemoveItem(ctx context.Context, data *model.ModifyCartIte
 				WithDebug(err.Error())
 		}
 	} else {
-		data.Quantity = item.Quantity - quantity
-		data.Price = prod.Price
-		data.Currency = prod.Currency
+		params := &model.CartItem{
+			CartID:    data.CartID,
+			ProductID: data.ProductID,
+			Quantity:  item.Quantity - quantity,
+			Price:     prod.Price,
+			Currency:  prod.Currency,
+			Note:      data.Note,
+		}
 
-		item, err = c.repo.Cart().UpdateItem(ctx, data)
+		item, err = c.repo.Cart().UpdateItem(ctx, params)
 		if err != nil {
 			return util.ErrInternalServerError.
 				WithError(ErrCannotAddCartItem.Error()).
@@ -143,10 +153,10 @@ func (c *cartBusiness) RemoveItem(ctx context.Context, data *model.ModifyCartIte
 	return nil
 }
 
-func (c *cartBusiness) GetByID(ctx context.Context, id int64) (interface{}, error) {
+func (c *cartBusiness) GetByID(ctx context.Context, id *int64) (interface{}, error) {
 	var cart *model.Cart
 	var err error
-	if id == -1 {
+	if id == nil || *id == 0 {
 		cart, err = c.repo.Cart().GetActiveCart(ctx)
 		if err != nil {
 			return nil, util.ErrBadRequest.
@@ -154,7 +164,7 @@ func (c *cartBusiness) GetByID(ctx context.Context, id int64) (interface{}, erro
 				WithDebug(err.Error())
 		}
 	} else {
-		cart, err = c.repo.Cart().GetByID(ctx, id)
+		cart, err = c.repo.Cart().GetByID(ctx, *id)
 		if err != nil {
 			if util.ErrNotFound.Is(err) {
 				return nil, util.ErrNotFound.

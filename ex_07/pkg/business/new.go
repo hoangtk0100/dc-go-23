@@ -18,7 +18,7 @@ func NewBusiness(repo repository.Repository, tokenMaker token.TokenMaker) *busin
 		repo:       repo,
 		productBiz: NewProductBusiness(repo),
 		cartBiz:    NewCartBusiness(repo),
-		userBiz:    NewUserUserBusiness(repo),
+		userBiz:    NewUserBusiness(repo),
 		authBiz:    NewAuthBusiness(repo, tokenMaker),
 	}
 }
