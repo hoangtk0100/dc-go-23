@@ -63,6 +63,7 @@ func (c *cartRepo) DeleteItem(ctx context.Context, cartID int64, prodID int64) e
 func (c *cartRepo) GetItem(ctx context.Context, cartID int64, prodID int64) (*model.CartItem, error) {
 	var item model.CartItem
 	if err := c.db.
+		Table(item.TableName()).
 		Where("cart_id = ?", cartID).
 		Where("product_id = ?", prodID).
 		First(&item).Error; err != nil {
@@ -88,8 +89,10 @@ func (c *cartRepo) GetItems(ctx context.Context, cartID int64) ([]model.CartItem
 	return items, nil
 }
 
-func (c *cartRepo) Create(ctx context.Context) (*model.Cart, error) {
+func (c *cartRepo) Create(ctx context.Context, username string) (*model.Cart, error) {
 	var cart model.Cart
+	cart.OwnerUsername = username
+
 	tx := c.db.Begin()
 	if err := tx.Create(&cart).Error; err != nil {
 		tx.Rollback()

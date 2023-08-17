@@ -34,18 +34,15 @@ type CartItem struct {
 }
 
 func (CartItem) TableName() string {
-	return Cart{}.TableName()
+	return "cart_items"
 }
 
 type ModifyCartItemParams struct {
-	CartID    int64   `json:"-"`
-	ProductID int64   `json:"product_id" binding:"required,min=1"`
-	Quantity  int64   `json:"quantity" gorm:"column:quantity;" binding:"required,min=0"`
-	Price     float64 `json:"price" gorm:"column:price;" binding:"required,min=0"`
-	Currency  string  `json:"currency" gorm:"column:currency;default:USD;" binding:"required,currency"`
-	Note      string  `json:"note,omitempty" gorm:"column:note;"`
+	ProductID int64  `json:"product_id" binding:"required,min=1"`
+	Quantity  int64  `json:"quantity" gorm:"column:quantity;" binding:"required,min=0"`
+	Note      string `json:"note,omitempty" gorm:"column:note;"`
 }
 
 func (ModifyCartItemParams) TableName() string {
-	return Cart{}.TableName()
+	return CartItem{}.TableName()
 }

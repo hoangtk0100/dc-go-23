@@ -11,6 +11,7 @@ type Server interface {
 	GetRouter() *gin.Engine
 	GetRepository() repository.Repository
 	GetTokenMaker() token.TokenMaker
+	RunDBMigration()
 	Start()
 
 	// Product

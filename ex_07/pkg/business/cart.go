@@ -47,9 +47,10 @@ func (c *cartBusiness) AddItem(ctx context.Context, data *model.ModifyCartItemPa
 			WithError(ErrProductDeleted.Error())
 	}
 
+	curUsername := util.GetRequester(ctx).GetUID()
 	cart, err := c.repo.Cart().GetActiveCart(ctx)
 	if err != nil {
-		cart, err = c.repo.Cart().Create(ctx)
+		cart, err = c.repo.Cart().Create(ctx, curUsername)
 		if err != nil {
 			return util.ErrInternalServerError.
 				WithError(ErrCannotAddCartItem.Error()).
@@ -58,7 +59,7 @@ func (c *cartBusiness) AddItem(ctx context.Context, data *model.ModifyCartItemPa
 	}
 
 	params := &model.CartItem{
-		CartID:    data.CartID,
+		CartID:    cart.ID,
 		ProductID: data.ProductID,
 		Quantity:  data.Quantity,
 		Price:     prod.Price,
@@ -127,7 +128,7 @@ func (c *cartBusiness) RemoveItem(ctx context.Context, data *model.ModifyCartIte
 		}
 	} else {
 		params := &model.CartItem{
-			CartID:    data.CartID,
+			CartID:    cart.ID,
 			ProductID: data.ProductID,
 			Quantity:  item.Quantity - quantity,
 			Price:     prod.Price,
@@ -218,12 +219,14 @@ func (c *cartBusiness) Checkout(ctx context.Context) (*model.Payment, error) {
 		total += items[idx].Price * float64(items[idx].Quantity)
 	}
 
+	curUsername := util.GetRequester(ctx).GetUID()
 	params := &model.Payment{
-		CartID:   cart.ID,
-		Discount: 0,
-		Total:    total,
-		Currency: cart.Currency,
-		Note:     cart.Note,
+		CartID:        cart.ID,
+		Discount:      0,
+		Total:         total,
+		Currency:      cart.Currency,
+		Note:          cart.Note,
+		OwnerUsername: curUsername,
 	}
 
 	payment, err := c.repo.Payment().Create(ctx, params)

@@ -70,6 +70,19 @@ func (p *productRepo) GetByID(ctx context.Context, id int64) (*model.Product, er
 	return &prod, nil
 }
 
+func (p *productRepo) GetBySlug(ctx context.Context, slug string) (*model.Product, error) {
+	var prod model.Product
+	if err := p.db.Where("slug = ?", slug).First(&prod).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, util.ErrNotFound
+		}
+
+		return nil, errors.WithStack(err)
+	}
+
+	return &prod, nil
+}
+
 func (p *productRepo) GetAll(ctx context.Context) ([]model.Product, error) {
 	var result []model.Product
 	if err := p.db.Table(model.Product{}.TableName()).

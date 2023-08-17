@@ -3,6 +3,7 @@ package business
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/constant"
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/model"
@@ -30,16 +31,27 @@ func NewProductBusiness(repo repository.Repository) *productBusiness {
 func (b *productBusiness) Create(ctx context.Context, data *model.CreateProductParams) (*model.Product, error) {
 	// TODO: Check if brand and category exist
 
+	code := data.Code
+	if code == "" {
+		code, _ = util.RandomString(8)
+	}
+
+	slug := data.Slug
+	if slug == "" {
+		slug = strings.ToLower(data.Name)
+	}
+
 	params := &model.Product{
-		Name:        data.Name,
-		Code:        data.Code,
-		Quantity:    data.Quantity,
-		Weight:      data.Weight,
-		WeightUnit:  constant.WeightUnit(data.WeightUnit),
-		Price:       data.Price,
-		Currency:    constant.Currency(data.Currency),
-		Description: data.Description,
-		Slug:        data.Slug,
+		Name:            data.Name,
+		Code:            code,
+		Quantity:        data.Quantity,
+		Weight:          data.Weight,
+		WeightUnit:      constant.WeightUnit(data.WeightUnit),
+		Price:           data.Price,
+		Currency:        constant.Currency(data.Currency),
+		Description:     data.Description,
+		Slug:            b.generateSlug(ctx, slug),
+		CreatorUsername: util.GetRequester(ctx).GetUID(),
 	}
 
 	prod, err := b.repo.Product().Create(ctx, params)
@@ -136,4 +148,17 @@ func (b *productBusiness) validateExistedProduct(ctx context.Context, id int64) 
 	}
 
 	return prod, nil
+}
+
+func (b *productBusiness) generateSlug(ctx context.Context, name string) string {
+	name = strings.ReplaceAll(name, " ", "-")
+	for {
+		_, err := b.repo.Product().GetBySlug(ctx, name)
+		if err != nil {
+			return name
+		}
+
+		randStr, _ := util.RandomString(8)
+		name = name + randStr
+	}
 }
