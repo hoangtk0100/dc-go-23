@@ -22,7 +22,22 @@ dropdb:
 db:
 	docker exec -it $(DB_CONTAINER_NAME) psql -U $(DB_USERNAME) $(DB_NAME)
 
+new_migration:
+	migrate create -ext sql -dir migration -seq $(name)
+
+migrateup:
+	migrate -path migration -database "$(DB_SOURCE)" -verbose up
+
+migrateup1:
+	migrate -path migration -database "$(DB_SOURCE)" -verbose up 1
+
+migratedown:
+	migrate -path migration -database "$(DB_SOURCE)" -verbose down
+
+migratedown1:
+	migrate -path migration -database "$(DB_SOURCE)" -verbose down 1
+
 server:
 	go run main.go
 
-.PHONY: network postgres createdb dropdb db server
+.PHONY: up down network postgres createdb dropdb db new_migration migrateup migratedown migrateup1 migratedown1 server

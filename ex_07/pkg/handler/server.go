@@ -13,6 +13,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/business"
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/repository"
 	router "github.com/hoangtk0100/dc-go-23/ex_07/pkg/route"
@@ -65,6 +68,19 @@ func (server *Server) GetRepository() repository.Repository {
 
 func (server *Server) GetTokenMaker() token.TokenMaker {
 	return server.tokenMaker
+}
+
+func (server *Server) RunDBMigration() {
+	migration, err := migrate.New(server.config.MigrationURL, server.config.DBSource)
+	if err != nil {
+		log.Fatal("Can not create new migrate instance")
+	}
+
+	if err = migration.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal("Failed to run migrate up", err)
+	}
+
+	log.Println("DB migrated successfully")
 }
 
 func (server *Server) Start() {

@@ -18,6 +18,7 @@ var rootCMD = &cobra.Command{
 		}
 
 		server := handler.NewServer(config)
+		server.RunDBMigration()
 		server.Start()
 	},
 }
