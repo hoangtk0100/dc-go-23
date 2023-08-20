@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
@@ -89,9 +90,10 @@ func (c *cartRepo) GetItems(ctx context.Context, cartID int64) ([]model.CartItem
 	return items, nil
 }
 
-func (c *cartRepo) Create(ctx context.Context, username string) (*model.Cart, error) {
+func (c *cartRepo) Create(ctx context.Context, username string, code string) (*model.Cart, error) {
 	var cart model.Cart
 	cart.OwnerUsername = username
+	cart.Code = code
 
 	tx := c.db.Begin()
 	if err := tx.Create(&cart).Error; err != nil {
@@ -137,6 +139,21 @@ func (c *cartRepo) GetByID(ctx context.Context, id int64) (*model.Cart, error) {
 	var cart model.Cart
 	if err := c.db.
 		Where("id = ?", id).
+		First(&cart).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, util.ErrNotFound
+		}
+
+		return nil, errors.WithStack(err)
+	}
+
+	return &cart, nil
+}
+
+func (c *cartRepo) GetByCode(ctx context.Context, code string) (*model.Cart, error) {
+	var cart model.Cart
+	if err := c.db.
+		Where("code = ?", code).
 		First(&cart).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, util.ErrNotFound

@@ -23,25 +23,27 @@ type Config struct {
 
 func LoadConfig(path string) (config Config, err error) {
 	envFile := os.Getenv(envFileKey)
-	if envFile != "" {
-		path = envFile
-	} else {
-		if path == "" {
-			path = defaultEnvFile
+	if envFile == "" {
+		if path != "" {
+			envFile = path
+		} else {
+			envFile = defaultEnvFile
 		}
 	}
 
-	viper.SetConfigFile(path)
+	_, err = os.Stat(envFile)
+	if err == nil {
+		viper.SetConfigFile(envFile)
+		viper.AutomaticEnv()
 
-	// Automatically overrides values with the value of corresponding environment variable if they exist
-	viper.AutomaticEnv()
+		err = viper.ReadInConfig()
+		if err != nil {
+			return
+		}
 
-	// Find and read that env file
-	err = viper.ReadInConfig()
-	if err != nil {
+		err = viper.Unmarshal(&config)
 		return
 	}
 
-	err = viper.Unmarshal(&config)
 	return
 }

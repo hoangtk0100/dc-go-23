@@ -3,22 +3,20 @@ services:
   db:
     image: postgres:14-alpine
     restart: always
+    container_name: ex7_db
     environment:
       POSTGRES_DB: ecommerce
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    container_name: ecommerce
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - db_data:/var/lib/postgresql/data/
     networks:
       - ecommerce_network
     ports:
-      - "55432:5432"
-    expose:
-      - "55432"
+      - "5432:5432"
 
 volumes:
-  postgres_data:
+  db_data:
 
 networks:
   ecommerce_network:

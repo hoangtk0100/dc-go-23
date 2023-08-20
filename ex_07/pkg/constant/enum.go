@@ -11,9 +11,9 @@ const (
 type WeightUnit string
 
 const (
-	WeightUnitGram  WeightUnit = "GRAM"
-	WeightUnitPound WeightUnit = "POUND"
-	WeightUnitKg    WeightUnit = "KG"
+	WeightUnitGram WeightUnit = "GRAM"
+	WeightUnitLBS  WeightUnit = "LBS"
+	WeightUnitKg   WeightUnit = "KG"
 )
 
 type ProductStatus string
