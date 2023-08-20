@@ -18,6 +18,7 @@ type ProductRepository interface {
 	Update(ctx context.Context, id int64, data *model.Product) (*model.Product, error)
 	DeleteByID(ctx context.Context, id int64) error
 	GetByID(ctx context.Context, id int64) (*model.Product, error)
+	GetByCode(ctx context.Context, code string) (*model.Product, error)
 	GetBySlug(ctx context.Context, slug string) (*model.Product, error)
 	GetAll(ctx context.Context) ([]model.Product, error)
 }
@@ -28,10 +29,11 @@ type CartRepository interface {
 	DeleteItem(ctx context.Context, cartID int64, prodID int64) error
 	GetItem(ctx context.Context, cartID int64, prodID int64) (*model.CartItem, error)
 	GetItems(ctx context.Context, cartID int64) ([]model.CartItem, error)
-	Create(ctx context.Context, username string) (*model.Cart, error)
+	Create(ctx context.Context, username string, code string) (*model.Cart, error)
 	Update(ctx context.Context, data *model.Cart) (*model.Cart, error)
 	Delete(ctx context.Context, id int64) error
 	GetByID(ctx context.Context, id int64) (*model.Cart, error)
+	GetByCode(ctx context.Context, code string) (*model.Cart, error)
 	GetActiveCart(ctx context.Context) (*model.Cart, error)
 }
 

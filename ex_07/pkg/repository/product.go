@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/util"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -60,6 +61,19 @@ func (p *productRepo) DeleteByID(ctx context.Context, id int64) error {
 func (p *productRepo) GetByID(ctx context.Context, id int64) (*model.Product, error) {
 	var prod model.Product
 	if err := p.db.Where("id = ?", id).First(&prod).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, util.ErrNotFound
+		}
+
+		return nil, errors.WithStack(err)
+	}
+
+	return &prod, nil
+}
+
+func (p *productRepo) GetByCode(ctx context.Context, code string) (*model.Product, error) {
+	var prod model.Product
+	if err := p.db.Where("code = ?", code).First(&prod).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, util.ErrNotFound
 		}

@@ -2,15 +2,16 @@ package handler
 
 import (
 	"context"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
-	custom_validator "github.com/hoangtk0100/dc-go-23/ex_07/pkg/validation"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
+	custom_validator "github.com/hoangtk0100/dc-go-23/ex_07/pkg/validation"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
@@ -73,7 +74,7 @@ func (server *Server) GetTokenMaker() token.TokenMaker {
 func (server *Server) RunDBMigration() {
 	migration, err := migrate.New(server.config.MigrationURL, server.config.DBSource)
 	if err != nil {
-		log.Fatal("Can not create new migrate instance")
+		log.Fatal("Can not create new migrate instance", err)
 	}
 
 	if err = migration.Up(); err != nil && err != migrate.ErrNoChange {
@@ -90,6 +91,7 @@ func (server *Server) Start() {
 	}
 
 	go func() {
+		log.Println("Server running at:", server.config.ServerAddress)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("Server closed unexpectedly: ", err)
 		}

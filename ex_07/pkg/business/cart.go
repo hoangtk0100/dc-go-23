@@ -50,7 +50,8 @@ func (c *cartBusiness) AddItem(ctx context.Context, data *model.ModifyCartItemPa
 	curUsername := util.GetRequester(ctx).GetUID()
 	cart, err := c.repo.Cart().GetActiveCart(ctx)
 	if err != nil {
-		cart, err = c.repo.Cart().Create(ctx, curUsername)
+		code := c.generateCode(ctx, "")
+		cart, err = c.repo.Cart().Create(ctx, curUsername, code)
 		if err != nil {
 			return util.ErrInternalServerError.
 				WithError(ErrCannotAddCartItem.Error()).
@@ -70,6 +71,7 @@ func (c *cartBusiness) AddItem(ctx context.Context, data *model.ModifyCartItemPa
 	quantity := data.Quantity
 	item, err := c.repo.Cart().GetItem(ctx, cart.ID, params.ProductID)
 	if err != nil && util.ErrNotFound.Is(err) {
+		params.Total = prod.Price * (float64(data.Quantity))
 		item, err = c.repo.Cart().CreateItem(ctx, params)
 		if err != nil {
 			return util.ErrInternalServerError.
@@ -78,6 +80,7 @@ func (c *cartBusiness) AddItem(ctx context.Context, data *model.ModifyCartItemPa
 		}
 	} else {
 		params.Quantity += item.Quantity
+		params.Total = prod.Price * (float64(params.Quantity))
 		item, err = c.repo.Cart().UpdateItem(ctx, params)
 		if err != nil {
 			return util.ErrInternalServerError.
@@ -127,13 +130,14 @@ func (c *cartBusiness) RemoveItem(ctx context.Context, data *model.ModifyCartIte
 				WithDebug(err.Error())
 		}
 	} else {
+		newQuantity := item.Quantity - quantity
 		params := &model.CartItem{
 			CartID:    cart.ID,
 			ProductID: data.ProductID,
-			Quantity:  item.Quantity - quantity,
+			Quantity:  newQuantity,
 			Price:     prod.Price,
 			Currency:  prod.Currency,
-			Note:      data.Note,
+			Total:     prod.Price * (float64(newQuantity)),
 		}
 
 		item, err = c.repo.Cart().UpdateItem(ctx, params)
@@ -150,7 +154,6 @@ func (c *cartBusiness) RemoveItem(ctx context.Context, data *model.ModifyCartIte
 			WithError(ErrCannotAddCartItem.Error()).
 			WithDebug(err.Error())
 	}
-
 	return nil
 }
 
@@ -208,10 +211,15 @@ func (c *cartBusiness) Checkout(ctx context.Context) (*model.Payment, error) {
 	}
 
 	items, err := c.repo.Cart().GetItems(ctx, cart.ID)
-	if err != nil || len(items) == 0 {
-		return nil, util.ErrBadRequest.
-			WithError(ErrNoItems.Error()).
+	if err != nil {
+		return nil, util.ErrInternalServerError.
+			WithError(ErrCannotCheckout.Error()).
 			WithDebug(err.Error())
+	}
+
+	if len(items) == 0 {
+		return nil, util.ErrBadRequest.
+			WithError(ErrNoItems.Error())
 	}
 
 	var total float64
@@ -225,6 +233,7 @@ func (c *cartBusiness) Checkout(ctx context.Context) (*model.Payment, error) {
 		Discount:      0,
 		Total:         total,
 		Currency:      cart.Currency,
+		Status:        constant.PaymentStatusPaid,
 		Note:          cart.Note,
 		OwnerUsername: curUsername,
 	}
@@ -249,8 +258,25 @@ func (c *cartBusiness) Checkout(ctx context.Context) (*model.Payment, error) {
 func (c *cartBusiness) updateCart(ctx context.Context, cart *model.Cart, prod *model.Product, quantity int64) (*model.Cart, error) {
 	cart.Quantity += quantity
 	cart.Total += prod.Price * float64(quantity)
-	cart.Weight += prod.Weight * float64(quantity)
+	cart.Weight += util.ConvertWeight(prod.Weight, prod.WeightUnit, cart.WeightUnit) * float64(quantity)
 	cart.Currency = prod.Currency
 
 	return c.repo.Cart().Update(ctx, cart)
+}
+
+func (c *cartBusiness) generateCode(ctx context.Context, code string) string {
+	if code == "" {
+		randStr, _ := util.RandomString(8)
+		code = randStr
+	}
+
+	for {
+		_, err := c.repo.Cart().GetByCode(ctx, code)
+		if err != nil {
+			return code
+		}
+
+		randStr, _ := util.RandomString(8)
+		code = randStr
+	}
 }

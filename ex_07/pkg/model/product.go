@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/constant"
 	"time"
+
+	"github.com/hoangtk0100/dc-go-23/ex_07/pkg/constant"
 )
 
 type Product struct {
@@ -10,12 +11,12 @@ type Product struct {
 	BrandID         int64                  `json:"brand_id" gorm:"column:brand_id;"`
 	CategoryID      int64                  `json:"category_id" gorm:"column:category_id;"`
 	Code            string                 `json:"code,omitempty" gorm:"column:code;"`
-	Name            string                 `json:"name" gorm:"column:name;" binding:"required"`
-	Quantity        int64                  `json:"quantity" gorm:"column:quantity;" binding:"required,min=0"`
-	Weight          float64                `json:"weight" gorm:"column:weight;" binding:"required,gt=0"`
-	WeightUnit      constant.WeightUnit    `json:"weight_unit" gorm:"column:weight_unit;default:KG;" binding:"required,weight_unit"`
-	Price           float64                `json:"price" gorm:"column:price;" binding:"required,min=0"`
-	Currency        constant.Currency      `json:"currency" gorm:"column:currency;default:USD;" binding:"required,currency"`
+	Name            string                 `json:"name" gorm:"column:name;"`
+	Quantity        int64                  `json:"quantity" gorm:"column:quantity;"`
+	Weight          float64                `json:"weight" gorm:"column:weight;"`
+	WeightUnit      constant.WeightUnit    `json:"weight_unit" gorm:"column:weight_unit;default:KG;"`
+	Price           float64                `json:"price" gorm:"column:price;"`
+	Currency        constant.Currency      `json:"currency" gorm:"column:currency;default:USD;"`
 	Description     string                 `json:"description,omitempty" gorm:"column:description;"`
 	Slug            string                 `json:"slug" gorm:"column:slug;"`
 	Sold            int64                  `json:"sold" gorm:"column:sold;"`

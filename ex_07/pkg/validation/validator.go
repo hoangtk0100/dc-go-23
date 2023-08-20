@@ -24,7 +24,7 @@ func IsCurrency(input string) bool {
 func IsWeightUnit(input string) bool {
 	unit := WeightUnit(input)
 	switch unit {
-	case WeightUnitGram, WeightUnitPound, WeightUnitKg:
+	case WeightUnitGram, WeightUnitLBS, WeightUnitKg:
 		return true
 	default:
 		return false

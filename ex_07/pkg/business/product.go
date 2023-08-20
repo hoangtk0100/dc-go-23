@@ -31,15 +31,8 @@ func NewProductBusiness(repo repository.Repository) *productBusiness {
 func (b *productBusiness) Create(ctx context.Context, data *model.CreateProductParams) (*model.Product, error) {
 	// TODO: Check if brand and category exist
 
-	code := data.Code
-	if code == "" {
-		code, _ = util.RandomString(8)
-	}
-
-	slug := data.Slug
-	if slug == "" {
-		slug = strings.ToLower(data.Name)
-	}
+	code := b.generateCode(ctx, data.Code)
+	slug := b.generateSlug(ctx, data.Slug)
 
 	params := &model.Product{
 		Name:            data.Name,
@@ -50,7 +43,7 @@ func (b *productBusiness) Create(ctx context.Context, data *model.CreateProductP
 		Price:           data.Price,
 		Currency:        constant.Currency(data.Currency),
 		Description:     data.Description,
-		Slug:            b.generateSlug(ctx, slug),
+		Slug:            slug,
 		CreatorUsername: util.GetRequester(ctx).GetUID(),
 	}
 
@@ -160,5 +153,22 @@ func (b *productBusiness) generateSlug(ctx context.Context, name string) string 
 
 		randStr, _ := util.RandomString(8)
 		name = name + randStr
+	}
+}
+
+func (b *productBusiness) generateCode(ctx context.Context, code string) string {
+	if code == "" {
+		randStr, _ := util.RandomString(8)
+		code = randStr
+	}
+
+	for {
+		_, err := b.repo.Product().GetByCode(ctx, code)
+		if err != nil {
+			return code
+		}
+
+		randStr, _ := util.RandomString(8)
+		code = randStr
 	}
 }
